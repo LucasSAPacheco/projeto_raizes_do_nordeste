@@ -71,3 +71,47 @@ def criar_pedido(db: Session, cliente_id: int, unidade_id: int,
     db.commit()
     db.refresh(pedido)
     return pedido
+
+
+def atualizar_status(db: Session, pedido_id: int, novo_status: StatusPedido,
+                     usuario_perfil: str) -> Pedido:
+    """
+    Atualiza o status do pedido seguindo o fluxo permitido:
+    AGUARDANDO_PAGAMENTO → PAGO → EM_PREPARO → PRONTO → ENTREGUE
+    Qualquer status pode ir para CANCELADO.
+    Apenas ADMIN e GERENTE podem cancelar pedidos já pagos.
+    """
+    pedido = db.query(Pedido).filter(Pedido.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Pedido não encontrado.")
+
+    fluxo_permitido = {
+        StatusPedido.AGUARDANDO_PAGAMENTO: [StatusPedido.PAGO, StatusPedido.CANCELADO],
+        StatusPedido.PAGO:                 [StatusPedido.EM_PREPARO, StatusPedido.CANCELADO],
+        StatusPedido.EM_PREPARO:           [StatusPedido.PRONTO, StatusPedido.CANCELADO],
+        StatusPedido.PRONTO:               [StatusPedido.ENTREGUE, StatusPedido.CANCELADO],
+        StatusPedido.ENTREGUE:             [],
+        StatusPedido.CANCELADO:            [],
+    }
+
+    permitidos = fluxo_permitido.get(pedido.status, [])
+
+    if novo_status not in permitidos:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Não é possível mudar de '{pedido.status.value}' para '{novo_status.value}'. "
+                   f"Status permitidos: {[s.value for s in permitidos] or 'nenhum'}."
+        )
+
+    if novo_status == StatusPedido.CANCELADO and pedido.status == StatusPedido.PAGO:
+        if usuario_perfil not in ("ADMIN", "GERENTE"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Apenas ADMIN ou GERENTE podem cancelar pedidos já pagos."
+            )
+
+    pedido.status = novo_status
+    db.commit()
+    db.refresh(pedido)
+    return pedido
