@@ -115,3 +115,35 @@ def atualizar_status(db: Session, pedido_id: int, novo_status: StatusPedido,
     db.commit()
     db.refresh(pedido)
     return pedido
+
+
+def listar_pedidos(db: Session, unidade_id: int = None, cliente_id: int = None,
+                   canal_pedido: CanalPedido = None,
+                   status_pedido: StatusPedido = None,
+                   page: int = 1, limit: int = 10) -> list:
+    """
+    Lista pedidos com filtros opcionais por unidade, cliente, canal e status.
+    Suporta paginação via page e limit.
+    """
+    query = db.query(Pedido)
+
+    if unidade_id:
+        query = query.filter(Pedido.unidade_id == unidade_id)
+    if cliente_id:
+        query = query.filter(Pedido.cliente_id == cliente_id)
+    if canal_pedido:
+        query = query.filter(Pedido.canal_pedido == canal_pedido)
+    if status_pedido:
+        query = query.filter(Pedido.status == status_pedido)
+
+    offset = (page - 1) * limit
+    return query.order_by(Pedido.criado_em.desc()).offset(offset).limit(limit).all()
+
+
+def buscar_pedido(db: Session, pedido_id: int) -> Pedido:
+    """Busca um pedido pelo ID ou retorna 404."""
+    pedido = db.query(Pedido).filter(Pedido.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Pedido não encontrado.")
+    return pedido
