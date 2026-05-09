@@ -3,6 +3,7 @@ from app.api.auth_router import router as auth_router
 from app.api.unidade_router import router as unidade_router
 from app.api.produto_router import router as produto_router
 from app.api.estoque_router import router as estoque_router
+from app.api.pedido_router import router as pedido_router
 
 app = FastAPI(
     title='Raízes do Nordeste API',
@@ -14,6 +15,7 @@ app.include_router(auth_router)
 app.include_router(unidade_router)
 app.include_router(produto_router)
 app.include_router(estoque_router)
+app.include_router(pedido_router)
 
 
 @app.get("/health", tags=["Saúde"])
