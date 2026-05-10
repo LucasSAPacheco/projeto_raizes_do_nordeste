@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.infrastructure.database import get_db
@@ -107,8 +107,18 @@ def meus_pedidos(
 def buscar(pedido_id: int,
            usuario_atual: Usuario = Depends(get_usuario_atual),
            db: Session = Depends(get_db)):
-    """Retorna um pedido pelo ID."""
-    return buscar_pedido(db, pedido_id)
+    """
+    Retorna um pedido pelo ID.
+    Cliente so consegue ver os proprios pedidos; funcionarios veem qualquer um.
+    """
+    pedido = buscar_pedido(db, pedido_id)
+    if (usuario_atual.perfil == PerfilUsuario.CLIENTE
+            and pedido.cliente_id != usuario_atual.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Voce nao tem permissao para acessar este pedido.",
+        )
+    return pedido
 
 
 @router.patch("/{pedido_id}/status", response_model=PedidoResponse,
