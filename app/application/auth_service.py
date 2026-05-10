@@ -1,7 +1,10 @@
+import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.domain.models import Usuario, PerfilUsuario, PontosFidelidade
 from app.infrastructure.security import hash_senha, verificar_senha, criar_token
+
+logger = logging.getLogger(__name__)
 
 
 def cadastrar_usuario(db: Session, nome: str, email: str, senha: str,
@@ -43,6 +46,7 @@ def login(db: Session, email: str, senha: str) -> dict:
     usuario = db.query(Usuario).filter(Usuario.email == email).first()
 
     if not usuario or not verificar_senha(senha, usuario.senha_hash):
+        logger.warning("Falha de login para email=%s", email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="E-mail ou senha incorretos.",
@@ -50,10 +54,12 @@ def login(db: Session, email: str, senha: str) -> dict:
         )
 
     if not usuario.ativo:
+        logger.warning("Tentativa de login de usuario inativo id=%s", usuario.id)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuário inativo. Entre em contato com o suporte."
         )
 
     token = criar_token({"sub": str(usuario.id), "perfil": usuario.perfil.value})
+    logger.info("Login OK usuario_id=%s perfil=%s", usuario.id, usuario.perfil.value)
     return {"access_token": token, "token_type": "bearer"}

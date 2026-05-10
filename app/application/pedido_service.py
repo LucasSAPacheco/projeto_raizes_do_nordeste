@@ -1,9 +1,12 @@
+import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.domain.models import (
     Pedido, ItemPedido, StatusPedido, CanalPedido,
     Produto, Estoque
 )
+
+logger = logging.getLogger(__name__)
 
 
 def criar_pedido(db: Session, cliente_id: int, unidade_id: int,
@@ -70,6 +73,10 @@ def criar_pedido(db: Session, cliente_id: int, unidade_id: int,
     pedido.valor_total = round(valor_total, 2)
     db.commit()
     db.refresh(pedido)
+    logger.info(
+        "Pedido criado id=%s cliente_id=%s unidade_id=%s canal=%s total=%.2f",
+        pedido.id, cliente_id, unidade_id, canal_pedido.value, pedido.valor_total
+    )
     return pedido
 
 
@@ -111,9 +118,14 @@ def atualizar_status(db: Session, pedido_id: int, novo_status: StatusPedido,
                 detail="Apenas ADMIN ou GERENTE podem cancelar pedidos já pagos."
             )
 
+    status_anterior = pedido.status.value
     pedido.status = novo_status
     db.commit()
     db.refresh(pedido)
+    logger.info(
+        "Pedido id=%s status %s -> %s por perfil=%s",
+        pedido.id, status_anterior, novo_status.value, usuario_perfil
+    )
     return pedido
 
 

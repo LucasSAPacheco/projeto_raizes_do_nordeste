@@ -1,8 +1,11 @@
 import json
+import logging
 import random
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.domain.models import Pagamento, Pedido, StatusPagamento, StatusPedido
+
+logger = logging.getLogger(__name__)
 
 
 def _gateway_mock(valor: float, forma_pagamento: str) -> dict:
@@ -67,6 +70,10 @@ def solicitar_pagamento(db: Session, pedido_id: int,
 
     db.commit()
     db.refresh(pagamento)
+    logger.info(
+        "Pagamento pedido_id=%s forma=%s valor=%.2f status=%s",
+        pedido_id, forma_pagamento, pagamento.valor, status_pagamento.value
+    )
     return pagamento
 
 
