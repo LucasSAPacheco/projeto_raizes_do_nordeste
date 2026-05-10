@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.infrastructure.database import get_db
-from app.domain.models import StatusPagamento, Usuario
+from app.domain.models import StatusPagamento, Usuario, PerfilUsuario
 from app.api.deps import get_usuario_atual
 from app.application.pagamento_service import solicitar_pagamento, buscar_pagamento
 
@@ -48,5 +48,16 @@ def pagar(body: PagamentoRequest,
 def consultar(pedido_id: int,
               usuario_atual: Usuario = Depends(get_usuario_atual),
               db: Session = Depends(get_db)):
-    """Retorna o registro de pagamento de um pedido."""
-    return buscar_pagamento(db, pedido_id)
+    """
+    Retorna o registro de pagamento de um pedido.
+    Cliente so pode consultar pagamentos dos proprios pedidos;
+    funcionarios consultam qualquer um.
+    """
+    pagamento = buscar_pagamento(db, pedido_id)
+    if (usuario_atual.perfil == PerfilUsuario.CLIENTE
+            and pagamento.pedido.cliente_id != usuario_atual.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Voce nao tem permissao para acessar este pagamento.",
+        )
+    return pagamento
