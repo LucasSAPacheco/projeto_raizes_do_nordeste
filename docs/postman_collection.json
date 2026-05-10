@@ -1,0 +1,627 @@
+{
+  "info": {
+    "name": "Raizes do Nordeste API",
+    "description": "Colecao de requisicoes para a API Raizes do Nordeste (UNINTER 2026, trilha back-end).\n\nFluxo recomendado:\n1. Cadastre um ADMIN, faca login e o token sera salvo automaticamente em {{token_admin}}.\n2. Cadastre um CLIENTE, faca login e o token sera salvo em {{token_cliente}}.\n3. Crie unidade, produto e movimentacao de estoque (autenticado como admin).\n4. Crie um pedido (autenticado como cliente), pague e ganhe pontos.\n\nA pasta 'Plano de Testes' contem os 10 cenarios exigidos pelo roteiro (6 positivos + 4 negativos).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000"},
+    {"key": "token_admin", "value": ""},
+    {"key": "token_cliente", "value": ""},
+    {"key": "unidade_id", "value": ""},
+    {"key": "produto_id", "value": ""},
+    {"key": "pedido_id", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Cadastrar ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Admin Raizes\",\n  \"email\": \"admin@raizes.com\",\n  \"senha\": \"admin123\",\n  \"perfil\": \"ADMIN\",\n  \"consentimento_lgpd\": true\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/cadastro", "host": ["{{base_url}}"], "path": ["auth", "cadastro"]}
+          }
+        },
+        {
+          "name": "Cadastrar CLIENTE",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Joao da Silva\",\n  \"email\": \"joao@cliente.com\",\n  \"senha\": \"cliente123\",\n  \"perfil\": \"CLIENTE\",\n  \"consentimento_lgpd\": true\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/cadastro", "host": ["{{base_url}}"], "path": ["auth", "cadastro"]}
+          }
+        },
+        {
+          "name": "Login ADMIN (salva token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('token_admin', data.access_token);",
+                  "  console.log('Token admin salvo.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@raizes.com\",\n  \"senha\": \"admin123\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]}
+          }
+        },
+        {
+          "name": "Login CLIENTE (salva token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('token_cliente', data.access_token);",
+                  "  console.log('Token cliente salvo.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao@cliente.com\",\n  \"senha\": \"cliente123\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]}
+          }
+        },
+        {
+          "name": "Meu perfil (/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_cliente}}"}],
+            "url": {"raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unidades",
+      "item": [
+        {
+          "name": "Criar unidade (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('unidade_id', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Unidade Centro Fortaleza\",\n  \"endereco\": \"Rua Major Facundo, 100\",\n  \"cidade\": \"Fortaleza\",\n  \"estado\": \"CE\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/unidades", "host": ["{{base_url}}"], "path": ["unidades"]}
+          }
+        },
+        {
+          "name": "Listar unidades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/unidades?apenas_ativas=true",
+              "host": ["{{base_url}}"],
+              "path": ["unidades"],
+              "query": [{"key": "apenas_ativas", "value": "true"}]
+            }
+          }
+        },
+        {
+          "name": "Buscar unidade por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/unidades/{{unidade_id}}", "host": ["{{base_url}}"], "path": ["unidades", "{{unidade_id}}"]}
+          }
+        },
+        {
+          "name": "Atualizar unidade",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"endereco\": \"Rua Major Facundo, 200\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/unidades/{{unidade_id}}", "host": ["{{base_url}}"], "path": ["unidades", "{{unidade_id}}"]}
+          }
+        },
+        {
+          "name": "Desativar unidade (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_admin}}"}],
+            "url": {"raw": "{{base_url}}/unidades/{{unidade_id}}", "host": ["{{base_url}}"], "path": ["unidades", "{{unidade_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Produtos",
+      "item": [
+        {
+          "name": "Criar produto (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('produto_id', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Tapioca de queijo coalho\",\n  \"descricao\": \"Recheada com queijo coalho derretido\",\n  \"preco\": 12.50,\n  \"categoria\": \"Lanche\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/produtos", "host": ["{{base_url}}"], "path": ["produtos"]}
+          }
+        },
+        {
+          "name": "Listar produtos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/produtos", "host": ["{{base_url}}"], "path": ["produtos"]}
+          }
+        },
+        {
+          "name": "Buscar produto por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/produtos/{{produto_id}}", "host": ["{{base_url}}"], "path": ["produtos", "{{produto_id}}"]}
+          }
+        },
+        {
+          "name": "Atualizar produto",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preco\": 13.00\n}"
+            },
+            "url": {"raw": "{{base_url}}/produtos/{{produto_id}}", "host": ["{{base_url}}"], "path": ["produtos", "{{produto_id}}"]}
+          }
+        },
+        {
+          "name": "Remover produto",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_admin}}"}],
+            "url": {"raw": "{{base_url}}/produtos/{{produto_id}}", "host": ["{{base_url}}"], "path": ["produtos", "{{produto_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estoque",
+      "item": [
+        {
+          "name": "Entrada de estoque",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade_id\": {{unidade_id}},\n  \"produto_id\": {{produto_id}},\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 50,\n  \"observacao\": \"Reposicao inicial\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/estoque/movimentar", "host": ["{{base_url}}"], "path": ["estoque", "movimentar"]}
+          }
+        },
+        {
+          "name": "Saida de estoque",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade_id\": {{unidade_id}},\n  \"produto_id\": {{produto_id}},\n  \"tipo\": \"SAIDA\",\n  \"quantidade\": 2,\n  \"observacao\": \"Ajuste manual\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/estoque/movimentar", "host": ["{{base_url}}"], "path": ["estoque", "movimentar"]}
+          }
+        },
+        {
+          "name": "Listar estoque da unidade",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_admin}}"}],
+            "url": {"raw": "{{base_url}}/estoque/unidades/{{unidade_id}}", "host": ["{{base_url}}"], "path": ["estoque", "unidades", "{{unidade_id}}"]}
+          }
+        },
+        {
+          "name": "Saldo de produto na unidade",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_admin}}"}],
+            "url": {"raw": "{{base_url}}/estoque/unidades/{{unidade_id}}/produtos/{{produto_id}}", "host": ["{{base_url}}"], "path": ["estoque", "unidades", "{{unidade_id}}", "produtos", "{{produto_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Criar pedido (cliente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('pedido_id', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade_id\": {{unidade_id}},\n  \"canal_pedido\": \"APP\",\n  \"itens\": [\n    { \"produto_id\": {{produto_id}}, \"quantidade\": 2 }\n  ],\n  \"observacao\": \"Sem cebola\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/pedidos", "host": ["{{base_url}}"], "path": ["pedidos"]}
+          }
+        },
+        {
+          "name": "Listar pedidos (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_admin}}"}],
+            "url": {
+              "raw": "{{base_url}}/pedidos?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Meus pedidos (cliente)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_cliente}}"}],
+            "url": {"raw": "{{base_url}}/pedidos/meus", "host": ["{{base_url}}"], "path": ["pedidos", "meus"]}
+          }
+        },
+        {
+          "name": "Buscar pedido por ID",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_cliente}}"}],
+            "url": {"raw": "{{base_url}}/pedidos/{{pedido_id}}", "host": ["{{base_url}}"], "path": ["pedidos", "{{pedido_id}}"]}
+          }
+        },
+        {
+          "name": "Atualizar status (PAGO -> EM_PREPARO)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_PREPARO\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/pedidos/{{pedido_id}}/status", "host": ["{{base_url}}"], "path": ["pedidos", "{{pedido_id}}", "status"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "Solicitar pagamento (PIX)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": {{pedido_id}},\n  \"forma_pagamento\": \"PIX\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/pagamentos", "host": ["{{base_url}}"], "path": ["pagamentos"]}
+          }
+        },
+        {
+          "name": "Consultar pagamento do pedido",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_cliente}}"}],
+            "url": {"raw": "{{base_url}}/pagamentos/{{pedido_id}}", "host": ["{{base_url}}"], "path": ["pagamentos", "{{pedido_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fidelidade",
+      "item": [
+        {
+          "name": "Saldo de pontos",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_cliente}}"}],
+            "url": {"raw": "{{base_url}}/fidelidade/saldo", "host": ["{{base_url}}"], "path": ["fidelidade", "saldo"]}
+          }
+        },
+        {
+          "name": "Ganhar pontos pelo pedido pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": {{pedido_id}}\n}"
+            },
+            "url": {"raw": "{{base_url}}/fidelidade/ganhar", "host": ["{{base_url}}"], "path": ["fidelidade", "ganhar"]}
+          }
+        },
+        {
+          "name": "Resgatar pontos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade\": 5\n}"
+            },
+            "url": {"raw": "{{base_url}}/fidelidade/resgatar", "host": ["{{base_url}}"], "path": ["fidelidade", "resgatar"]}
+          }
+        },
+        {
+          "name": "Historico de pontos",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_cliente}}"}],
+            "url": {"raw": "{{base_url}}/fidelidade/historico", "host": ["{{base_url}}"], "path": ["fidelidade", "historico"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plano de Testes",
+      "description": "10 cenarios exigidos pelo roteiro: 6 positivos + 4 negativos.",
+      "item": [
+        {
+          "name": "[POS 1] Cadastro de cliente com sucesso",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Teste\",\n  \"email\": \"maria.teste@cliente.com\",\n  \"senha\": \"senha123\",\n  \"perfil\": \"CLIENTE\",\n  \"consentimento_lgpd\": true\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/cadastro", "host": ["{{base_url}}"], "path": ["auth", "cadastro"]},
+            "description": "Esperado: 201 Created. Cria usuario com perfil CLIENTE e cria saldo de fidelidade zerado."
+          }
+        },
+        {
+          "name": "[POS 2] Login retorna JWT",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria.teste@cliente.com\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]},
+            "description": "Esperado: 200 OK e access_token no body."
+          }
+        },
+        {
+          "name": "[POS 3] Criar unidade (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_admin}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Unidade Recife Boa Viagem\",\n  \"endereco\": \"Av. Boa Viagem, 1500\",\n  \"cidade\": \"Recife\",\n  \"estado\": \"PE\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/unidades", "host": ["{{base_url}}"], "path": ["unidades"]},
+            "description": "Esperado: 201 Created. Cria nova unidade da rede."
+          }
+        },
+        {
+          "name": "[POS 4] Criar pedido (CLIENTE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade_id\": {{unidade_id}},\n  \"canal_pedido\": \"TOTEM\",\n  \"itens\": [\n    { \"produto_id\": {{produto_id}}, \"quantidade\": 1 }\n  ]\n}"
+            },
+            "url": {"raw": "{{base_url}}/pedidos", "host": ["{{base_url}}"], "path": ["pedidos"]},
+            "description": "Esperado: 201 Created. Status inicial AGUARDANDO_PAGAMENTO, estoque descontado."
+          }
+        },
+        {
+          "name": "[POS 5] Pagamento aprovado (mock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": {{pedido_id}},\n  \"forma_pagamento\": \"PIX\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/pagamentos", "host": ["{{base_url}}"], "path": ["pagamentos"]},
+            "description": "Esperado: 201 Created. ~90% das vezes retorna APROVADO e o pedido vai para PAGO."
+          }
+        },
+        {
+          "name": "[POS 6] Consultar saldo de fidelidade",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token_cliente}}"}],
+            "url": {"raw": "{{base_url}}/fidelidade/saldo", "host": ["{{base_url}}"], "path": ["fidelidade", "saldo"]},
+            "description": "Esperado: 200 OK com saldo do usuario logado."
+          }
+        },
+        {
+          "name": "[NEG 1] Cadastro sem consentimento LGPD",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Sem LGPD\",\n  \"email\": \"sem.lgpd@cliente.com\",\n  \"senha\": \"senha123\",\n  \"perfil\": \"CLIENTE\",\n  \"consentimento_lgpd\": false\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/cadastro", "host": ["{{base_url}}"], "path": ["auth", "cadastro"]},
+            "description": "Esperado: 400 Bad Request. Cadastro recusado por falta de consentimento LGPD."
+          }
+        },
+        {
+          "name": "[NEG 2] Login com senha incorreta",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria.teste@cliente.com\",\n  \"senha\": \"senha-errada\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]},
+            "description": "Esperado: 401 Unauthorized."
+          }
+        },
+        {
+          "name": "[NEG 3] Pedido sem itens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidade_id\": {{unidade_id}},\n  \"canal_pedido\": \"APP\",\n  \"itens\": []\n}"
+            },
+            "url": {"raw": "{{base_url}}/pedidos", "host": ["{{base_url}}"], "path": ["pedidos"]},
+            "description": "Esperado: 400 Bad Request. Pedido vazio nao e aceito."
+          }
+        },
+        {
+          "name": "[NEG 4] Resgatar pontos sem saldo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token_cliente}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade\": 99999\n}"
+            },
+            "url": {"raw": "{{base_url}}/fidelidade/resgatar", "host": ["{{base_url}}"], "path": ["fidelidade", "resgatar"]},
+            "description": "Esperado: 409 Conflict. Saldo insuficiente para resgate."
+          }
+        }
+      ]
+    }
+  ]
+}
