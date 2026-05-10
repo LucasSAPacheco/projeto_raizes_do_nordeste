@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -22,7 +23,7 @@ class PagamentoResponse(BaseModel):
     forma_pagamento: str
     status: StatusPagamento
     valor: float
-    resposta_gateway: str
+    resposta_gateway: Optional[str] = None
 
     class Config:
         from_attributes = True
