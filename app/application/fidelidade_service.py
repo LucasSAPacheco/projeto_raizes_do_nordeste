@@ -32,6 +32,12 @@ def ganhar_pontos(db: Session, usuario_id: int, pedido_id: int) -> PontosFidelid
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Pedido não encontrado.")
 
+    if pedido.cliente_id != usuario_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Voce so pode acumular pontos de pedidos proprios."
+        )
+
     if pedido.status not in (StatusPedido.PAGO, StatusPedido.EM_PREPARO,
                               StatusPedido.PRONTO, StatusPedido.ENTREGUE):
         raise HTTPException(
