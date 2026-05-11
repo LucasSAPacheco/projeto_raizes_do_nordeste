@@ -1,6 +1,10 @@
 roteiro_da_atividade.pdf
 uso_de_ia.txt
+docs/relatorio_academico.md
 .env
 venv/
 __pycache__/
 *.pyc
+*.db
+.pytest_cache/
+.claude/

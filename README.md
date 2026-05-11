@@ -15,7 +15,7 @@ A API cobre cadastro/autenticação, cardápio, controle de estoque por unidade,
 
 ## Pré-requisitos
 
-- Python 3.11 ou superior
+- Python 3.11, 3.12 ou 3.13 (3.14 ainda não é suportado pelo pydantic-core)
 - PostgreSQL rodando em algum lugar (local, container, etc.)
 - Git
 
@@ -53,7 +53,7 @@ cp .env.example .env
 O `.env` espera:
 
 ```
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/raizes_nordeste
+DATABASE_URL=postgresql+psycopg://usuario:senha@localhost:5432/raizes_nordeste
 SECRET_KEY=alguma-chave-secreta
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
