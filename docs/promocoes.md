@@ -5,9 +5,6 @@ Documento de regras (não implementado nesta versão da API). O objetivo é deix
 ## Tipos de promoção previstos
 
 1. **Cupom de desconto** — código que o cliente aplica no pedido. Pode ser percentual (ex.: 10% off) ou valor fixo (ex.: R$ 5 off).
-2. **Promoção automática por canal** — descontos aplicados a pedidos feitos por um canal específico (ex.: 5% off em pedidos `APP`).
-3. **Combo** — preço promocional para uma combinação fixa de produtos (ex.: tapioca + suco por R$ 18).
-4. **Campanha por unidade** — desconto vinculado a uma unidade específica em datas determinadas (ex.: aniversário da loja).
 
 ## Regras gerais
 
@@ -31,5 +28,5 @@ Sem alterar o que já existe, seria necessário:
 ## Observações de segurança
 
 - Cupom é validado no servidor (cliente nunca informa o desconto, apenas o código).
-- Aplicação de cupom é idempotente por pedido (só pode aplicar uma vez).
-- Tentativas de aplicar cupom inválido ou expirado são logadas para detectar abuso.
+- Aplicação de cupom é única
+- Tentativas de aplicar cupom inválido será avisao que o cupom expirou ou atingiu o limite de uso.
