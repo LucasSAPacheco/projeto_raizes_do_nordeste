@@ -1,8 +1,3 @@
-"""
-Testes da função atualizar_status.
-Cobre: fluxo normal, transição inválida, pedido inexistente,
-cancelamento de pedido pago sem permissão e com permissão.
-"""
 import pytest
 from fastapi import HTTPException
 from app.application.pedido_service import criar_pedido, atualizar_status
@@ -21,7 +16,6 @@ def pedido(db, usuario_cliente, unidade, produto_com_estoque):
 
 
 def test_atualizar_status_fluxo_normal(db, pedido):
-    """Avança o pedido pelo fluxo completo até ENTREGUE."""
     p = atualizar_status(db, pedido.id, StatusPedido.PAGO, "ADMIN")
     assert p.status == StatusPedido.PAGO
 
@@ -36,14 +30,12 @@ def test_atualizar_status_fluxo_normal(db, pedido):
 
 
 def test_atualizar_status_transicao_invalida(db, pedido):
-    """Pular etapas no fluxo deve retornar erro 409."""
     with pytest.raises(HTTPException) as exc:
         atualizar_status(db, pedido.id, StatusPedido.ENTREGUE, "ADMIN")
     assert exc.value.status_code == 409
 
 
 def test_atualizar_status_pedido_finalizado(db, pedido):
-    """Não é permitido alterar pedido já ENTREGUE."""
     atualizar_status(db, pedido.id, StatusPedido.PAGO, "ADMIN")
     atualizar_status(db, pedido.id, StatusPedido.EM_PREPARO, "COZINHA")
     atualizar_status(db, pedido.id, StatusPedido.PRONTO, "COZINHA")
@@ -55,7 +47,6 @@ def test_atualizar_status_pedido_finalizado(db, pedido):
 
 
 def test_cancelar_pedido_pago_sem_permissao(db, pedido):
-    """Cliente comum não pode cancelar pedido já pago."""
     atualizar_status(db, pedido.id, StatusPedido.PAGO, "ADMIN")
 
     with pytest.raises(HTTPException) as exc:
@@ -64,14 +55,12 @@ def test_cancelar_pedido_pago_sem_permissao(db, pedido):
 
 
 def test_cancelar_pedido_pago_com_permissao(db, pedido):
-    """GERENTE pode cancelar pedido já pago."""
     atualizar_status(db, pedido.id, StatusPedido.PAGO, "ADMIN")
     p = atualizar_status(db, pedido.id, StatusPedido.CANCELADO, "GERENTE")
     assert p.status == StatusPedido.CANCELADO
 
 
 def test_atualizar_status_pedido_inexistente(db):
-    """Pedido que não existe deve retornar erro 404."""
     with pytest.raises(HTTPException) as exc:
         atualizar_status(db, 9999, StatusPedido.PAGO, "ADMIN")
     assert exc.value.status_code == 404

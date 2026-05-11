@@ -10,8 +10,6 @@ from app.domain.models import Usuario
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 
-# ── Schemas de entrada e saída ──────────────────────────
-
 class CadastroRequest(BaseModel):
     nome: str
     email: EmailStr
@@ -41,15 +39,9 @@ class UsuarioResponse(BaseModel):
         from_attributes = True
 
 
-# ── Endpoints ───────────────────────────────────────────
-
 @router.post("/cadastro", response_model=UsuarioResponse, status_code=201,
              summary="Cadastrar novo usuário")
 def cadastro(body: CadastroRequest, db: Session = Depends(get_db)):
-    """
-    Cria uma nova conta. O campo **consentimento_lgpd** deve ser `true`
-    para confirmar que o usuário aceita o uso dos seus dados (exigência da LGPD).
-    """
     return cadastrar_usuario(
         db=db,
         nome=body.nome,
@@ -62,14 +54,9 @@ def cadastro(body: CadastroRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse, summary="Fazer login")
 def fazer_login(body: LoginRequest, db: Session = Depends(get_db)):
-    """
-    Autentica o usuário e retorna um token JWT.
-    Use o token no cabeçalho: `Authorization: Bearer <token>`
-    """
     return login(db=db, email=body.email, senha=body.senha)
 
 
 @router.get("/me", response_model=UsuarioResponse, summary="Ver meu perfil")
 def meu_perfil(usuario_atual: Usuario = Depends(get_usuario_atual)):
-    """Retorna os dados do usuário autenticado pelo token."""
     return usuario_atual

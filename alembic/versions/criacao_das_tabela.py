@@ -1,22 +1,13 @@
-"""criacao_inicial_das_tabelas
-
-Revision ID: 001
-Revises: 
-Create Date: 2026-05-09
-
-"""
-from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-revision: str = '001'
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision = '001'
+down_revision = None
+branch_labels = None
+depends_on = None
 
 
-def upgrade() -> None:
-    # Tabela de usuários
+def upgrade():
     op.create_table(
         'usuarios',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -32,7 +23,6 @@ def upgrade() -> None:
     op.create_index(op.f('ix_usuarios_email'), 'usuarios', ['email'], unique=True)
     op.create_index(op.f('ix_usuarios_id'), 'usuarios', ['id'], unique=False)
 
-    # Tabela de unidades
     op.create_table(
         'unidades',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -46,7 +36,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_unidades_id'), 'unidades', ['id'], unique=False)
 
-    # Tabela de produtos
     op.create_table(
         'produtos',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -60,7 +49,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_produtos_id'), 'produtos', ['id'], unique=False)
 
-    # Tabela de estoque (produto x unidade)
     op.create_table(
         'estoque',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -74,7 +62,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_estoque_id'), 'estoque', ['id'], unique=False)
 
-    # Tabela de movimentações de estoque
     op.create_table(
         'movimentacoes_estoque',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -88,7 +75,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_movimentacoes_estoque_id'), 'movimentacoes_estoque', ['id'], unique=False)
 
-    # Tabela de pedidos
     op.create_table(
         'pedidos',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -106,7 +92,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_pedidos_id'), 'pedidos', ['id'], unique=False)
 
-    # Tabela de itens do pedido
     op.create_table(
         'itens_pedido',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -120,7 +105,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_itens_pedido_id'), 'itens_pedido', ['id'], unique=False)
 
-    # Tabela de pagamentos
     op.create_table(
         'pagamentos',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -137,7 +121,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_pagamentos_id'), 'pagamentos', ['id'], unique=False)
 
-    # Tabela de pontos de fidelidade
     op.create_table(
         'pontos_fidelidade',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -150,7 +133,6 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_pontos_fidelidade_id'), 'pontos_fidelidade', ['id'], unique=False)
 
-    # Tabela de histórico de fidelidade
     op.create_table(
         'historico_fidelidade',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -166,7 +148,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_historico_fidelidade_id'), 'historico_fidelidade', ['id'], unique=False)
 
 
-def downgrade() -> None:
+def downgrade():
     op.drop_index(op.f('ix_historico_fidelidade_id'), table_name='historico_fidelidade')
     op.drop_table('historico_fidelidade')
     op.drop_index(op.f('ix_pontos_fidelidade_id'), table_name='pontos_fidelidade')

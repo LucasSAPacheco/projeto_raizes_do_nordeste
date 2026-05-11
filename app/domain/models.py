@@ -8,10 +8,6 @@ from sqlalchemy.orm import relationship
 from app.infrastructure.database import Base
 
 
-# ──────────────────────────────────────────────
-# ENUMS
-# ──────────────────────────────────────────────
-
 class PerfilUsuario(str, enum.Enum):
     ADMIN = "ADMIN"
     GERENTE = "GERENTE"
@@ -48,10 +44,6 @@ class TipoMovimentacaoEstoque(str, enum.Enum):
     SAIDA = "SAIDA"
 
 
-# ──────────────────────────────────────────────
-# USUÁRIO
-# ──────────────────────────────────────────────
-
 class Usuario(Base):
     __tablename__ = "usuarios"
 
@@ -68,10 +60,6 @@ class Usuario(Base):
     pontos_fidelidade = relationship("PontosFidelidade", back_populates="usuario", uselist=False)
 
 
-# ──────────────────────────────────────────────
-# UNIDADE
-# ──────────────────────────────────────────────
-
 class Unidade(Base):
     __tablename__ = "unidades"
 
@@ -87,10 +75,6 @@ class Unidade(Base):
     pedidos = relationship("Pedido", back_populates="unidade")
 
 
-# ──────────────────────────────────────────────
-# PRODUTO
-# ──────────────────────────────────────────────
-
 class Produto(Base):
     __tablename__ = "produtos"
 
@@ -105,10 +89,6 @@ class Produto(Base):
     estoque = relationship("Estoque", back_populates="produto")
     itens_pedido = relationship("ItemPedido", back_populates="produto")
 
-
-# ──────────────────────────────────────────────
-# ESTOQUE
-# ──────────────────────────────────────────────
 
 class Estoque(Base):
     __tablename__ = "estoque"
@@ -136,10 +116,6 @@ class MovimentacaoEstoque(Base):
 
     estoque = relationship("Estoque", back_populates="movimentacoes")
 
-
-# ──────────────────────────────────────────────
-# PEDIDO
-# ──────────────────────────────────────────────
 
 class Pedido(Base):
     __tablename__ = "pedidos"
@@ -173,10 +149,6 @@ class ItemPedido(Base):
     produto = relationship("Produto", back_populates="itens_pedido")
 
 
-# ──────────────────────────────────────────────
-# PAGAMENTO
-# ──────────────────────────────────────────────
-
 class Pagamento(Base):
     __tablename__ = "pagamentos"
 
@@ -185,16 +157,12 @@ class Pagamento(Base):
     forma_pagamento = Column(String(50), nullable=False)
     status = Column(SAEnum(StatusPagamento), nullable=False, default=StatusPagamento.PENDENTE)
     valor = Column(Float, nullable=False)
-    resposta_gateway = Column(Text, nullable=True)  # JSON da resposta do mock
+    resposta_gateway = Column(Text, nullable=True)
     criado_em = Column(DateTime, default=datetime.utcnow)
     atualizado_em = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     pedido = relationship("Pedido", back_populates="pagamento")
 
-
-# ──────────────────────────────────────────────
-# FIDELIDADE
-# ──────────────────────────────────────────────
 
 class PontosFidelidade(Base):
     __tablename__ = "pontos_fidelidade"
@@ -214,7 +182,7 @@ class HistoricoFidelidade(Base):
     id = Column(Integer, primary_key=True, index=True)
     pontos_id = Column(Integer, ForeignKey("pontos_fidelidade.id"), nullable=False)
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=True)
-    tipo = Column(String(20), nullable=False)  # "GANHO" ou "RESGATE"
+    tipo = Column(String(20), nullable=False)
     quantidade = Column(Integer, nullable=False)
     criado_em = Column(DateTime, default=datetime.utcnow)
 

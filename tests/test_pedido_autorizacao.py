@@ -1,9 +1,3 @@
-"""
-Testes de autorizacao na consulta de pedidos.
-
-Garante que um cliente nao consiga acessar pedidos de outros clientes
-via GET /pedidos/{id}, mas que funcionarios continuem com acesso pleno.
-"""
 import pytest
 from app.application.pedido_service import criar_pedido
 from app.domain.models import (
@@ -13,7 +7,6 @@ from app.infrastructure.security import hash_senha
 
 
 def _login(client, email, senha):
-    """Atalho para logar e devolver o token JWT."""
     resp = client.post("/auth/login", json={"email": email, "senha": senha})
     assert resp.status_code == 200, resp.text
     return resp.json()["access_token"]
@@ -21,7 +14,6 @@ def _login(client, email, senha):
 
 @pytest.fixture
 def cliente_b(db):
-    """Cria um segundo cliente para validar o isolamento entre contas."""
     usuario = Usuario(
         nome="Maria Outra",
         email="maria@cliente.com",
@@ -40,10 +32,6 @@ def cliente_b(db):
 def test_cliente_nao_pode_ver_pedido_de_outro_cliente(
     client, db, usuario_cliente, cliente_b, unidade, produto_com_estoque
 ):
-    """
-    Bug original: cliente B conseguia visualizar o pedido do cliente A
-    apenas adivinhando o ID. Esperado: 403.
-    """
     pedido = criar_pedido(
         db=db,
         cliente_id=usuario_cliente.id,
@@ -66,7 +54,6 @@ def test_cliente_nao_pode_ver_pedido_de_outro_cliente(
 def test_cliente_pode_ver_proprio_pedido(
     client, db, usuario_cliente, unidade, produto_com_estoque
 ):
-    """O dono do pedido continua tendo acesso normal."""
     pedido = criar_pedido(
         db=db,
         cliente_id=usuario_cliente.id,
@@ -87,7 +74,6 @@ def test_cliente_pode_ver_proprio_pedido(
 def test_funcionario_pode_ver_qualquer_pedido(
     client, db, usuario_cliente, usuario_admin, unidade, produto_com_estoque
 ):
-    """Perfis operacionais (ADMIN aqui) seguem com acesso pleno."""
     pedido = criar_pedido(
         db=db,
         cliente_id=usuario_cliente.id,

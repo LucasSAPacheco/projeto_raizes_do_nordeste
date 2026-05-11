@@ -19,7 +19,7 @@ def get_url():
     return settings.DATABASE_URL
 
 
-def run_migrations_offline() -> None:
+def run_migrations_offline():
     url = get_url()
     context.configure(
         url=url,
@@ -31,7 +31,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
+def run_migrations_online():
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = get_url()
 

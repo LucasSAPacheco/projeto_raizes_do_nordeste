@@ -10,10 +10,6 @@ from app.application.estoque_service import (
 )
 
 router = APIRouter(prefix="/estoque", tags=["Estoque"])
-
-
-# ── Schemas ─────────────────────────────────────────────
-
 class MovimentacaoRequest(BaseModel):
     unidade_id: int
     produto_id: int
@@ -21,18 +17,13 @@ class MovimentacaoRequest(BaseModel):
     quantidade: int
     observacao: Optional[str] = None
 
-
 class EstoqueResponse(BaseModel):
     id: int
     unidade_id: int
     produto_id: int
     quantidade: int
-
     class Config:
         from_attributes = True
-
-
-# ── Endpoints ───────────────────────────────────────────
 
 @router.get("/unidades/{unidade_id}", response_model=list[EstoqueResponse],
             summary="Consultar estoque da unidade",
@@ -40,9 +31,7 @@ class EstoqueResponse(BaseModel):
                 PerfilUsuario.ADMIN, PerfilUsuario.GERENTE, PerfilUsuario.ATENDENTE
             ))])
 def listar(unidade_id: int, db: Session = Depends(get_db)):
-    """Lista o estoque de todos os produtos de uma unidade."""
     return listar_estoque_por_unidade(db, unidade_id)
-
 
 @router.get("/unidades/{unidade_id}/produtos/{produto_id}",
             response_model=EstoqueResponse,
@@ -51,7 +40,6 @@ def listar(unidade_id: int, db: Session = Depends(get_db)):
                 PerfilUsuario.ADMIN, PerfilUsuario.GERENTE, PerfilUsuario.ATENDENTE
             ))])
 def consultar(unidade_id: int, produto_id: int, db: Session = Depends(get_db)):
-    """Retorna o saldo atual de um produto específico em uma unidade."""
     return buscar_estoque(db, unidade_id, produto_id)
 
 
@@ -61,10 +49,6 @@ def consultar(unidade_id: int, produto_id: int, db: Session = Depends(get_db)):
                  PerfilUsuario.ADMIN, PerfilUsuario.GERENTE, PerfilUsuario.ATENDENTE
              ))])
 def movimentar(body: MovimentacaoRequest, db: Session = Depends(get_db)):
-    """
-    Registra uma movimentação de estoque (ENTRADA ou SAIDA).
-    Bloqueia a saída se não houver saldo suficiente.
-    """
     return movimentar_estoque(
         db, body.unidade_id, body.produto_id,
         body.tipo, body.quantidade, body.observacao

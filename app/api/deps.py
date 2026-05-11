@@ -5,15 +5,14 @@ from app.infrastructure.database import get_db
 from app.infrastructure.security import decodificar_token
 from app.domain.models import Usuario, PerfilUsuario
 
-bearer_scheme = HTTPBearer()
+auth_bearer = HTTPBearer()
 
 
 def get_usuario_atual(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    creds: HTTPAuthorizationCredentials = Depends(auth_bearer),
     db: Session = Depends(get_db)
 ) -> Usuario:
-    """Lê o token JWT do cabeçalho e retorna o usuário logado."""
-    payload = decodificar_token(credentials.credentials)
+    payload = decodificar_token(creds.credentials)
 
     if payload is None:
         raise HTTPException(
@@ -21,20 +20,15 @@ def get_usuario_atual(
             detail="Token inválido ou expirado.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
     usuario = db.query(Usuario).filter(Usuario.id == int(payload["sub"])).first()
-
     if not usuario or not usuario.ativo:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuário não encontrado ou inativo."
         )
-
     return usuario
 
-
 def exigir_perfil(*perfis: PerfilUsuario):
-    """Gera uma dependência que bloqueia quem não tiver o perfil necessário."""
     def verificar(usuario: Usuario = Depends(get_usuario_atual)):
         if usuario.perfil not in perfis:
             raise HTTPException(

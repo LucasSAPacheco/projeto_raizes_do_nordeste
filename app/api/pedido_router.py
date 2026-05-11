@@ -10,25 +10,17 @@ from app.application.pedido_service import (
 )
 
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
-
-
-# ── Schemas ─────────────────────────────────────────────
-
 class ItemPedidoRequest(BaseModel):
     produto_id: int
     quantidade: int
-
 
 class PedidoRequest(BaseModel):
     unidade_id: int
     canal_pedido: CanalPedido
     itens: list[ItemPedidoRequest]
     observacao: Optional[str] = None
-
-
 class AtualizarStatusRequest(BaseModel):
     status: StatusPedido
-
 
 class ItemPedidoResponse(BaseModel):
     produto_id: int
@@ -37,7 +29,6 @@ class ItemPedidoResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 class PedidoResponse(BaseModel):
     id: int
@@ -48,22 +39,14 @@ class PedidoResponse(BaseModel):
     valor_total: float
     observacao: Optional[str]
     itens: list[ItemPedidoResponse]
-
     class Config:
         from_attributes = True
-
-
-# ── Endpoints ───────────────────────────────────────────
 
 @router.post("", response_model=PedidoResponse, status_code=201,
              summary="Criar pedido")
 def criar(body: PedidoRequest,
           usuario_atual: Usuario = Depends(get_usuario_atual),
           db: Session = Depends(get_db)):
-    """
-    Cria um novo pedido. O cliente é identificado pelo token JWT.
-    O campo **canalPedido** é obrigatório (APP, TOTEM, BALCAO, PICKUP, WEB).
-    """
     return criar_pedido(
         db=db,
         cliente_id=usuario_atual.id,
@@ -72,7 +55,6 @@ def criar(body: PedidoRequest,
         itens=[item.model_dump() for item in body.itens],
         observacao=body.observacao,
     )
-
 
 @router.get("", response_model=list[PedidoResponse], summary="Listar pedidos",
             dependencies=[Depends(exigir_perfil(
@@ -87,10 +69,8 @@ def listar(
     limit: int = 10,
     db: Session = Depends(get_db)
 ):
-    """Lista pedidos com filtros opcionais. Apenas funcionários têm acesso."""
     return listar_pedidos(db, unidade_id=unidade_id, canal_pedido=canal_pedido,
                           status_pedido=status, page=page, limit=limit)
-
 
 @router.get("/meus", response_model=list[PedidoResponse], summary="Meus pedidos")
 def meus_pedidos(
@@ -99,7 +79,6 @@ def meus_pedidos(
     usuario_atual: Usuario = Depends(get_usuario_atual),
     db: Session = Depends(get_db)
 ):
-    """Retorna os pedidos do cliente logado."""
     return listar_pedidos(db, cliente_id=usuario_atual.id, page=page, limit=limit)
 
 
@@ -107,10 +86,6 @@ def meus_pedidos(
 def buscar(pedido_id: int,
            usuario_atual: Usuario = Depends(get_usuario_atual),
            db: Session = Depends(get_db)):
-    """
-    Retorna um pedido pelo ID.
-    Cliente so consegue ver os proprios pedidos; funcionarios veem qualquer um.
-    """
     pedido = buscar_pedido(db, pedido_id)
     if (usuario_atual.perfil == PerfilUsuario.CLIENTE
             and pedido.cliente_id != usuario_atual.id):
@@ -119,7 +94,6 @@ def buscar(pedido_id: int,
             detail="Voce nao tem permissao para acessar este pedido.",
         )
     return pedido
-
 
 @router.patch("/{pedido_id}/status", response_model=PedidoResponse,
               summary="Atualizar status do pedido",
@@ -130,5 +104,4 @@ def buscar(pedido_id: int,
 def atualizar(pedido_id: int, body: AtualizarStatusRequest,
               usuario_atual: Usuario = Depends(get_usuario_atual),
               db: Session = Depends(get_db)):
-    """Avança o status do pedido no fluxo. Apenas funcionários."""
     return atualizar_status(db, pedido_id, body.status, usuario_atual.perfil.value)

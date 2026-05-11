@@ -1,9 +1,3 @@
-"""
-Testes de autorizacao em GET /pagamentos/{pedido_id}.
-
-Cliente nao pode consultar o pagamento de um pedido que nao e dele.
-Funcionarios mantem acesso pleno.
-"""
 import pytest
 from unittest.mock import patch
 from app.application.pedido_service import criar_pedido
@@ -22,7 +16,6 @@ def _login(client, email, senha):
 
 @pytest.fixture
 def cliente_b(db):
-    """Segundo cliente para validar isolamento entre contas."""
     usuario = Usuario(
         nome="Maria Outra",
         email="maria@cliente.com",
@@ -40,7 +33,6 @@ def cliente_b(db):
 
 @pytest.fixture
 def pedido_pago_de_a(db, usuario_cliente, unidade, produto_com_estoque):
-    """Cria um pedido do cliente A e paga com aprovacao garantida."""
     pedido = criar_pedido(
         db=db,
         cliente_id=usuario_cliente.id,
@@ -56,10 +48,6 @@ def pedido_pago_de_a(db, usuario_cliente, unidade, produto_com_estoque):
 def test_cliente_nao_pode_ver_pagamento_de_outro_cliente(
     client, cliente_b, pedido_pago_de_a
 ):
-    """
-    Bug original: cliente B podia consultar o pagamento de um pedido
-    do cliente A apenas adivinhando o ID. Esperado: 403.
-    """
     token_b = _login(client, "maria@cliente.com", "senha456")
     resp = client.get(
         f"/pagamentos/{pedido_pago_de_a.id}",
@@ -72,7 +60,6 @@ def test_cliente_nao_pode_ver_pagamento_de_outro_cliente(
 
 
 def test_cliente_pode_ver_proprio_pagamento(client, pedido_pago_de_a):
-    """O dono do pedido continua consultando o pagamento normalmente."""
     token = _login(client, "joao@teste.com", "senha123")
     resp = client.get(
         f"/pagamentos/{pedido_pago_de_a.id}",
@@ -85,7 +72,6 @@ def test_cliente_pode_ver_proprio_pagamento(client, pedido_pago_de_a):
 def test_funcionario_pode_ver_qualquer_pagamento(
     client, usuario_admin, pedido_pago_de_a
 ):
-    """Funcionarios (ADMIN aqui) seguem com acesso pleno."""
     token = _login(client, "admin@teste.com", "admin123")
     resp = client.get(
         f"/pagamentos/{pedido_pago_de_a.id}",

@@ -1,11 +1,4 @@
 import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
 from fastapi import FastAPI
 from app.api.auth_router import router as auth_router
 from app.api.unidade_router import router as unidade_router
@@ -14,6 +7,12 @@ from app.api.estoque_router import router as estoque_router
 from app.api.pedido_router import router as pedido_router
 from app.api.pagamento_router import router as pagamento_router
 from app.api.fidelidade_router import router as fidelidade_router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 app = FastAPI(
     title='Raízes do Nordeste API',
